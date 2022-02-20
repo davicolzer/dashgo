@@ -14,9 +14,9 @@ export default function Home() {
         flexDir="column"
       >
         <Stack spacing="4">
-          <Input name="email" type="email" label="email" />
+          <Input name="email" type="email" label="E-mail" />
 
-          <Input name="password" type="password" label="password" />
+          <Input name="password" type="password" label="Password" />
         </Stack>
 
         <Button type="submit" mt="6" colorScheme="pink">

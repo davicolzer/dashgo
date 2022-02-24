@@ -36,6 +36,7 @@ export default function Header() {
           mr="2"
         ></IconButton>
       )}
+      
       <Logo />
 
       {isWideVersion && <SearchBox />}

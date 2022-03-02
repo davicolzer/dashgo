@@ -1,32 +1,27 @@
 import {
   Box,
   Button,
-  Checkbox,
   Flex,
   Heading,
-  Icon,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-  Text,
   Divider,
   VStack,
   SimpleGrid,
   HStack,
 } from "@chakra-ui/react";
-import Link from "next/link";
 import { SubmitHandler, useForm } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
+import Link from "next/link";
+import { useMutation } from "react-query";
 
 import { Input } from "../../components/Form/Input";
 import Header from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
+import { api } from "../../services/api";
+import { queryClient } from "../../services/queryClient";
+import Router from "next/router";
 
-type CreateUserFormatData = {
+type CreateUserFormData = {
   name: string;
   email: string;
   password: string;
@@ -45,19 +40,33 @@ const createUserFormSchema = yup.object().shape({
     .oneOf([null, yup.ref("password")], "As senhas precisam ser iguais"),
 });
 
-const handleCreateUser: SubmitHandler<CreateUserFormatData> = async (
-  values
-) => {
-  await new Promise((resolve) => setTimeout(resolve, 2000));
-
-  console.log(values);
-};
-
 export default function CreateUser() {
+  const createUser = useMutation(async (user: CreateUserFormData) => {
+    const response = await api.post("users", {
+      user: {
+        ...user,
+        create_at: new Date(),
+      },
+    });
+
+    return response.data.user;
+  }, {
+    onSuccess: () => {
+      queryClient.invalidateQueries('users')
+    }
+  });
+
   const { register, handleSubmit, formState } = useForm({
     resolver: yupResolver(createUserFormSchema),
   });
   const { errors } = formState;
+
+  const handleCreateUser: SubmitHandler<CreateUserFormData> = async (
+    values
+  ) => {
+    await createUser.mutateAsync(values);
+    Router.push('/users');
+  };
 
   return (
     <Box>
@@ -80,7 +89,12 @@ export default function CreateUser() {
           <Divider my="6" borderColor="gray.700" />
           <VStack spacing="8">
             <SimpleGrid minChildWidth="240px" spacing={["6", "8"]} w="100%">
-              <Input name="name" label="Nome completo" error={errors.name} {...register("name")} />
+              <Input
+                name="name"
+                label="Nome completo"
+                error={errors.name}
+                {...register("name")}
+              />
               <Input
                 name="email"
                 type="email"
